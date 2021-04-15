@@ -199,6 +199,12 @@ func GetDB(mysql_uri string) (*sql.DB, bool, error) {
 	return GetGenericDB("mysql", mysql_uri)
 }
 
+// GetDB returns a MySQL DB instance based on uri.
+// bool result indicates whether the DB was returned from cache; err
+func GetOpenGaussDB(opengauss_uri string) (*sql.DB, bool, error) {
+	return GetGenericDB("opengauss", opengauss_uri)
+}
+
 // GetDB returns a SQLite DB instance based on DB file name.
 // bool result indicates whether the DB was returned from cache; err
 func GetSQLiteDB(dbFile string) (*sql.DB, bool, error) {

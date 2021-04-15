@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	_ "gitee.com/opengauss/openGauss-connector-go-pq"
 	"github.com/go-sql-driver/mysql"
 	"regexp"
 	"runtime"

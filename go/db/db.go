@@ -51,6 +51,10 @@ func (this DummySqlResult) RowsAffected() (int64, error) {
 	return 1, nil
 }
 
+func getOpenGauss() string {
+	return "host=127.0.0.1 port=5432 user=gaussdb password=Enmo@123 dbname=postgres sslmode=disable"
+}
+
 func getMySQLURI() string {
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
@@ -86,23 +90,26 @@ func OpenTopology(host string, port int) (*sql.DB, error) {
 }
 
 func openTopology(host string, port int, readTimeout int) (db *sql.DB, err error) {
-	mysql_uri := fmt.Sprintf("%s:%s@tcp(%s:%d)/?timeout=%ds&readTimeout=%ds&interpolateParams=true",
-		config.Config.MySQLTopologyUser,
-		config.Config.MySQLTopologyPassword,
-		host, port,
-		config.Config.MySQLConnectTimeoutSeconds,
-		readTimeout,
-	)
-
-	if config.Config.MySQLTopologyUseMutualTLS ||
-		(config.Config.MySQLTopologyUseMixedTLS && requiresTLS(host, port, mysql_uri)) {
-		if mysql_uri, err = SetupMySQLTopologyTLS(mysql_uri); err != nil {
-			return nil, err
-		}
-	}
-	if db, _, err = sqlutils.GetDB(mysql_uri); err != nil {
+	//mysql_uri := fmt.Sprintf("%s:%s@tcp(%s:%d)/?timeout=%ds&readTimeout=%ds&interpolateParams=true",
+	//	config.Config.MySQLTopologyUser,
+	//	config.Config.MySQLTopologyPassword,
+	//	host, port,
+	//	config.Config.MySQLConnectTimeoutSeconds,
+	//	readTimeout,
+	//)
+	//
+	//if config.Config.MySQLTopologyUseMutualTLS ||
+	//	(config.Config.MySQLTopologyUseMixedTLS && requiresTLS(host, port, mysql_uri)) {
+	//	if mysql_uri, err = SetupMySQLTopologyTLS(mysql_uri); err != nil {
+	//		return nil, err
+	//	}
+	//}
+	if db, _, err = sqlutils.GetOpenGaussDB("host=127.0.0.1 port=5432 user=gaussdb password=Enmo@123 dbname=postgres sslmode=disable"); err != nil {
 		return nil, err
 	}
+	//if db, _, err = sqlutils.GetDB(mysql_uri); err != nil {
+	//	return nil, err
+	//}
 	if config.Config.MySQLConnectionLifetimeSeconds > 0 {
 		db.SetConnMaxLifetime(time.Duration(config.Config.MySQLConnectionLifetimeSeconds) * time.Second)
 	}
@@ -124,6 +131,21 @@ func openOrchestratorMySQLGeneric() (db *sql.DB, fromCache bool, err error) {
 		uri, _ = SetupMySQLOrchestratorTLS(uri)
 	}
 	return sqlutils.GetDB(uri)
+}
+
+func openOrchestratorOpenGaussGeneric() (db *sql.DB, fromCache bool, err error) {
+	//uri := fmt.Sprintf("%s:%s@tcp(%s:%d)/?timeout=%ds&readTimeout=%ds&interpolateParams=true",
+	//	config.Config.MySQLOrchestratorUser,
+	//	config.Config.MySQLOrchestratorPassword,
+	//	config.Config.MySQLOrchestratorHost,
+	//	config.Config.MySQLOrchestratorPort,
+	//	config.Config.MySQLConnectTimeoutSeconds,
+	//	config.Config.MySQLOrchestratorReadTimeoutSeconds,
+	//)
+	//if config.Config.MySQLOrchestratorUseMutualTLS {
+	//	uri, _ = SetupMySQLOrchestratorTLS(uri)
+	//}
+	return sqlutils.GetOpenGaussDB("host=127.0.0.1 port=5432 user=gaussdb password=Enmo@123 dbname=postgres sslmode=disable")
 }
 
 func IsSQLite() bool {
@@ -181,6 +203,28 @@ func OpenOrchestrator() (db *sql.DB, err error) {
 		db.SetMaxOpenConns(1)
 		db.SetMaxIdleConns(1)
 	} else {
+		//if db, fromCache, err := openOrchestratorOpenGaussGeneric(); err != nil {
+		//	return db, log.Errore(err)
+		//} else if !fromCache {
+		//	// first time ever we talk to MySQL
+		//	query := fmt.Sprintf("create database if not exists %s", config.Config.MySQLOrchestratorDatabase)
+		//	if _, err := db.Exec(query); err != nil {
+		//		return db, log.Errore(err)
+		//	}
+		//}
+		//dsn := getOpenGauss()
+		//db, fromCache, err = sqlutils.GetOpenGaussDB(dsn)
+		//if err == nil && !fromCache {
+		//	log.Debugf("Connected to orchestrator backend: %v", safeMySQLURI(dsn))
+		//
+		//	if config.Config.MySQLOrchestratorMaxPoolConnections > 0 {
+		//		log.Debugf("Orchestrator pool SetMaxOpenConns: %d", config.Config.MySQLOrchestratorMaxPoolConnections)
+		//		db.SetMaxOpenConns(config.Config.MySQLOrchestratorMaxPoolConnections)
+		//	}
+		//	if config.Config.MySQLConnectionLifetimeSeconds > 0 {
+		//		db.SetConnMaxLifetime(time.Duration(config.Config.MySQLConnectionLifetimeSeconds) * time.Second)
+		//	}
+		//}
 		if db, fromCache, err := openOrchestratorMySQLGeneric(); err != nil {
 			return db, log.Errore(err)
 		} else if !fromCache {
